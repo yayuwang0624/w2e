@@ -11,6 +11,7 @@ import { AddReview } from './rpc/add-review';
 import { AddDining } from './rpc/add-dining';
 import { GetDishesByRestaurant } from './rpc/get-dishes';
 import { GetDishesByReview } from './rpc/get-dishes-review';
+import { GetDishReviews } from './rpc/get-dish-reviews';
 import { GetDinings } from './rpc/get-dinings';
 import { GetReviews } from './rpc/get-reviews';
 import { GetReviewers } from './rpc/get-reviewers';
@@ -27,6 +28,7 @@ async function main() {
 		add_review: AddReview,
 		add_dining: AddDining,
 		get_dishes_by_review: GetDishesByReview,
+		get_dish_reviews: GetDishReviews,
 		get_dishes_by_restaurant: GetDishesByRestaurant,
 		get_dining: GetDinings,
 		get_reviews: GetReviews,

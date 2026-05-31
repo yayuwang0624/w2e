@@ -21,6 +21,7 @@ import {
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
+import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useState, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { v4 as UUID } from 'uuid';
@@ -218,6 +219,9 @@ const ReviewTable = () => {
     const [filteredReviews, setFilteredReviews] =
         React.useState<iReview[]>([]);
 
+    const focusUuid = useSearchParams().get('focus');
+    const focusHandled = useRef<string | null>(null);
+
     const visibleRows = React.useMemo(() => {
         return filteredReviews.slice(
             (pageIndex - 1) * rowsPerPage,
@@ -250,6 +254,37 @@ const ReviewTable = () => {
             });
         }
     }, [visibleRows]);
+
+    useEffect(() => {
+        if (!focusUuid || filteredReviews.length === 0) return;
+        if (focusHandled.current === focusUuid) return;
+        const idx = filteredReviews.findIndex(
+            (r) => r.uuid === focusUuid,
+        );
+        if (idx === -1) return;
+        setPageIndex(Math.trunc(idx / rowsPerPage) + 1);
+    }, [focusUuid, filteredReviews, rowsPerPage]);
+
+    useEffect(() => {
+        if (!focusUuid || focusHandled.current === focusUuid)
+            return;
+        if (!visibleRows.some((r) => r.uuid === focusUuid)) return;
+        const row = document.getElementById(`tr-${focusUuid}`);
+        if (!row) return;
+        focusHandled.current = focusUuid;
+        row.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+        });
+        row.classList.add(
+            'bg-primary-100',
+            'transition-colors',
+            'duration-1000',
+        );
+        setTimeout(() => {
+            row.classList.remove('bg-primary-100');
+        }, 2500);
+    }, [focusUuid, visibleRows]);
 
     const getReviews = async () => {
         const jsonRPCBody: any = {

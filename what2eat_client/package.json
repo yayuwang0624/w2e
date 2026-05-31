@@ -23,6 +23,7 @@
     "dayjs": "^1.11.13",
     "framer-motion": "^11.14.4",
     "next": "^15.5.9",
+    "plotly.js-dist-min": "^3.5.1",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "uuid": "^11.0.3"
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
+    "@types/plotly.js": "^3.0.10",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

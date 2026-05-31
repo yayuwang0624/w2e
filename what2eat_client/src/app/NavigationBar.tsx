@@ -21,6 +21,7 @@ import NextLink from 'next/link';
 const pages: string[] = [
     'Home',
     'Reviews',
+    'Stats',
     'Dining',
     'Edits',
 ];
@@ -28,6 +29,7 @@ const pages: string[] = [
 const ref: string[] = [
     '/',
     '/reviews',
+    '/stats',
     '/dining',
     '/edits',
 ];
