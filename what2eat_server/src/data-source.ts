@@ -8,20 +8,20 @@ import { RestaurantEntity } from './entity/restaurant-entity';
 import { ReviewerEntity } from './entity/reviewer-entity';
 
 export const AppDataSource = new DataSource({
-    type: 'sqlite',
-    database: '/what2eat_sqlite/what2eat.sqlite',
-    synchronize: true,
-    logging: false,
-    entities: [
-        RestaurantEntity,
-        ReviewEntity,
-        DishReviewEntity,
-        ReviewerEntity,
-        DishEntity,
-        DiningEntity,
-    ],
-    migrations: [],
-    subscribers: [],
+	type: 'sqlite',
+	database: 'what2eat_sqlite/what2eat.sqlite',
+	synchronize: true,
+	logging: false,
+	entities: [
+		RestaurantEntity,
+		ReviewEntity,
+		DishReviewEntity,
+		ReviewerEntity,
+		DishEntity,
+		DiningEntity,
+	],
+	migrations: [],
+	subscribers: [],
 });
 
 export const ReviewRepo = AppDataSource.getRepository(ReviewEntity);

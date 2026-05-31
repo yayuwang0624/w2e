@@ -18,32 +18,32 @@ import { GetRestaurants } from './rpc/get-restaurants';
 import { SubmitReviewForm } from './rpc/submit-review-form';
 
 async function main() {
-    const app = connect();
+	const app = connect();
 
-    // create a server
-    const server = new jayson.Server({
-        add_dish: AddDish,
-        add_dishes: AddDishes,
-        add_review: AddReview,
-        add_dining: AddDining,
-        get_dishes_by_review: GetDishesByReview,
-        get_dishes_by_restaurant: GetDishesByRestaurant,
-        get_dining: GetDinings,
-        get_reviews: GetReviews,
-        get_reviewers: GetReviewers,
-        get_restaurants: GetRestaurants,
-        submit_review_form: SubmitReviewForm,
-    });
+	// create a server
+	const server = new jayson.Server({
+		add_dish: AddDish,
+		add_dishes: AddDishes,
+		add_review: AddReview,
+		add_dining: AddDining,
+		get_dishes_by_review: GetDishesByReview,
+		get_dishes_by_restaurant: GetDishesByRestaurant,
+		get_dining: GetDinings,
+		get_reviews: GetReviews,
+		get_reviewers: GetReviewers,
+		get_restaurants: GetRestaurants,
+		submit_review_form: SubmitReviewForm,
+	});
 
-    await AppDataSource.initialize();
+	await AppDataSource.initialize();
 
-    // Migrate();
+	// Migrate();
 
-    app.use(morgan('combined'));
-    app.use(cors({ methods: ['POST'] }));
-    app.use(jsonParser());
-    app.use(server.middleware());
-    app.listen(5000);
+	app.use(morgan('combined'));
+	app.use(cors({ methods: ['POST'] }));
+	app.use(jsonParser());
+	app.use(server.middleware());
+	app.listen(8000);
 }
 
 main();

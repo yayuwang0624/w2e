@@ -50,6 +50,7 @@ interface iReview {
     score: number;
     comment: string;
     createdAt: Date;
+    unixTimestamp: number;
     uuid: string;
 }
 
@@ -212,7 +213,7 @@ const ToggleSubRowButton = (props: {
 const ReviewTable = () => {
     const [pageIndex, setPageIndex] = React.useState(1);
     const rowsPerPage = 12;
-    const [reviews, setReviews] = useState([]);
+    const [reviews, setReviews] = useState<iReview[]>([]);
     const [filter, setFilter] = React.useState('');
     const [filteredReviews, setFilteredReviews] =
         React.useState<iReview[]>([]);
@@ -268,8 +269,8 @@ const ReviewTable = () => {
                 },
             });
             const result = (await resp.json()).result;
-            const reviews = JSON.parse(result);
-            reviews.reverse();
+            const reviews: iReview[] = JSON.parse(result);
+            reviews.sort((a, b) => b.unixTimestamp - a.unixTimestamp);
             setReviews(reviews);
             setFilteredReviews(reviews);
         } catch (error) {
@@ -299,7 +300,10 @@ const ReviewTable = () => {
             review.restaurant,
             review.comment,
             review.score,
-            review.createdAt,
+            dayjs
+                .unix(review.unixTimestamp)
+                .tz('America/Vancouver')
+                .format('YYYY-MM-DD HH:mm'),
         ].join('\n');
     }
 
@@ -390,11 +394,10 @@ const ReviewTable = () => {
                                 {review.score}
                             </TableCell>
                             <TableCell>
-                                {dayjs(review.createdAt)
+                                {dayjs
+                                    .unix(review.unixTimestamp)
                                     .tz('America/Vancouver')
-                                    .format(
-                                        'YYYY-MM-DD HH:mm',
-                                    )}
+                                    .format('YYYY-MM-DD HH:mm')}
                             </TableCell>
                             <TableCell>
                                 <ToggleSubRowButton
