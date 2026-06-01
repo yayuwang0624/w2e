@@ -82,35 +82,79 @@ const RestaurantStats = (props: {
         if (uuid) router.push(`/reviews?focus=${uuid}`);
     };
 
-    const overviewData = useMemo<Data[]>(
-        () =>
-            TIERS.map((tier) => {
-                const items = leaderboard.filter(
-                    (r: iRestaurantSummary) => tier.test(r.mean),
-                );
-                return {
-                    type: 'scatter',
-                    mode: 'markers',
-                    name: tier.label,
-                    x: items.map((r) => r.mean),
-                    y: items.map((r) => r.count),
-                    customdata: items.map((r) => r.restaurant),
-                    text: items.map((r) => r.restaurant),
-                    marker: {
-                        size: 14,
-                        opacity: 0.85,
-                        color: tier.color,
-                        line: { width: 1, color: '#888' },
-                    },
-                    hovertemplate:
-                        '<b>%{customdata}</b><br>' +
-                        'avg score: %{x:.1f}<br>' +
-                        'visits: %{y}<br>' +
-                        '(click to inspect)<extra></extra>',
-                } as Data;
-            }),
-        [leaderboard],
-    );
+    const overviewData = useMemo<Data[]>(() => {
+        const sel = selected
+            ? leaderboard.find(
+                  (r: iRestaurantSummary) =>
+                      r.restaurant === selected,
+              )
+            : undefined;
+
+        const tierTraces = TIERS.map((tier) => {
+            // The selected node is excluded here and redrawn once as the
+            // emphasised overlay below, so it isn't rendered twice.
+            const items = leaderboard.filter(
+                (r: iRestaurantSummary) =>
+                    tier.test(r.mean) && r.restaurant !== selected,
+            );
+            // Fade the remaining nodes when something is selected, and make
+            // them non-hoverable so they can't steal hover from the selected
+            // overlay when their coordinates overlap.
+            const opacity = sel ? 0.08 : 0.85;
+            return {
+                type: 'scatter',
+                mode: 'markers',
+                name: tier.label,
+                x: items.map((r) => r.mean),
+                y: items.map((r) => r.count),
+                customdata: items.map((r) => r.restaurant),
+                text: items.map((r) => r.restaurant),
+                // hoverinfo 'skip' is ignored while a hovertemplate is set, so
+                // the template must be dropped to truly disable these nodes.
+                hoverinfo: sel ? 'skip' : undefined,
+                marker: {
+                    size: 14,
+                    opacity,
+                    color: tier.color,
+                    line: { width: 1, color: '#888' },
+                },
+                hovertemplate: sel
+                    ? undefined
+                    : '<b>%{customdata}</b><br>' +
+                      'avg score: %{x:.1f}<br>' +
+                      'visits: %{y}<br>' +
+                      '(click to inspect)<extra></extra>',
+            } as Data;
+        });
+
+        // Redraw the selected node on top, enlarged with a bold outline,
+        // so overlapping neighbours can't be mistaken for it.
+        if (sel) {
+            const selColor =
+                TIERS.find((t) => t.test(sel.mean))?.color ?? '#111';
+            tierTraces.push({
+                type: 'scatter',
+                mode: 'markers',
+                name: 'selected',
+                x: [sel.mean],
+                y: [sel.count],
+                customdata: [sel.restaurant],
+                text: [sel.restaurant],
+                showlegend: false,
+                marker: {
+                    size: 22,
+                    color: selColor,
+                    opacity: 1,
+                    line: { width: 3, color: '#111' },
+                },
+                hovertemplate:
+                    '<b>%{customdata}</b><br>' +
+                    'avg score: %{x:.1f}<br>' +
+                    'visits: %{y}<extra></extra>',
+            } as Data);
+        }
+        return tierTraces;
+    }, [leaderboard, selected]);
 
     const overviewLayout = useMemo<Partial<Layout>>(
         () => ({
@@ -118,13 +162,15 @@ const RestaurantStats = (props: {
                 text:
                     'Restaurants — average score vs visits' + suffix,
             },
+            // Autorange (the double-click view) fits the data with padding
+            // instead of pinning points to a hardcoded 0–100 / tozero edge.
             xaxis: {
                 title: { text: 'Average score' + suffix },
-                range: [0, 100],
+                autorange: true,
             },
             yaxis: {
                 title: { text: 'Visits' },
-                rangemode: 'tozero',
+                autorange: true,
             },
             hovermode: 'closest',
             legend: { title: { text: 'Avg score' } },
@@ -132,7 +178,14 @@ const RestaurantStats = (props: {
         [suffix],
     );
 
+    // With nothing selected, clicking a node selects it. Once something is
+    // selected, any click (node or empty space) clears the selection -- see
+    // the wrapper onClick below for the empty-space case.
     const pickRestaurant = (point: PlotPoint) => {
+        if (selected) {
+            setSelected(null);
+            return;
+        }
         const name = point.customdata as string | undefined;
         if (name) setSelected(name);
     };
@@ -202,11 +255,20 @@ const RestaurantStats = (props: {
 
     return (
         <div className='w-full flex flex-col space-y-[3vh]'>
-            <PlotlyChart
-                data={overviewData}
-                layout={overviewLayout}
-                onPointClick={pickRestaurant}
-            />
+            {/* While a restaurant is selected, a click anywhere in the chart
+                (including empty space, which Plotly doesn't emit as a point
+                click) exits the selection. */}
+            <div
+                onClick={() => {
+                    if (selected) setSelected(null);
+                }}
+            >
+                <PlotlyChart
+                    data={overviewData}
+                    layout={overviewLayout}
+                    onPointClick={pickRestaurant}
+                />
+            </div>
 
             <Autocomplete
                 label='Restaurant'

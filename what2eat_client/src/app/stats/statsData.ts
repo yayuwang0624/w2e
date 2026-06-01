@@ -206,17 +206,26 @@ export interface iRestaurantSummary {
 export const restaurantSummary = (
     reviews: iReview[],
 ): iRestaurantSummary[] => {
-    const grouped = new Map<string, number[]>();
+    const grouped = new Map<
+        string,
+        { scores: number[]; dinings: Set<string> }
+    >();
     for (const r of reviews) {
         if (!grouped.has(r.restaurant)) {
-            grouped.set(r.restaurant, []);
+            grouped.set(r.restaurant, {
+                scores: [],
+                dinings: new Set(),
+            });
         }
-        grouped.get(r.restaurant)!.push(r.score);
+        const g = grouped.get(r.restaurant)!;
+        g.scores.push(r.score);
+        g.dinings.add(r.dining);
     }
     return Array.from(grouped.entries())
-        .map(([restaurant, scores]) => ({
+        .map(([restaurant, { scores, dinings }]) => ({
             restaurant,
-            count: scores.length,
+            // visits = distinct dinings, not number of reviews
+            count: dinings.size,
             mean: mean(scores),
         }))
         .sort(
