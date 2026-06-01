@@ -131,38 +131,65 @@ const ReviewerStats = (props: {
         [suffix, bounds],
     );
 
-    const histData = useMemo(
-        () =>
-            reviewers.map(
-                (reviewer) =>
-                    ({
-                        type: 'histogram',
-                        name: reviewer,
-                        x: reviews
-                            .filter((r) => r.reviewer === reviewer)
-                            .map((r) => r.score),
-                        opacity: 0.6,
-                        marker: {
-                            color: reviewerColor(
-                                reviewer,
-                                allReviewers,
-                            ),
-                        },
-                        xbins: { start: 0, end: 100, size: 5 },
-                    }) as Data,
-            ),
-        [reviews, reviewers, allReviewers],
-    );
+    // Manual binning so each bar can carry both percent (height) and the
+    // raw count (hover label / customdata).
+    const histData = useMemo(() => {
+        const start = 0;
+        const end = 100;
+        const size = 2;
+        const nbins = (end - start) / size;
+        const centers = Array.from(
+            { length: nbins },
+            (_, i) => start + (i + 0.5) * size,
+        );
+
+        return reviewers.map((reviewer) => {
+            const scores = reviews
+                .filter((r) => r.reviewer === reviewer)
+                .map((r) => r.score);
+            const total = scores.length;
+            const counts = new Array(nbins).fill(0);
+            for (const s of scores) {
+                let idx = Math.floor((s - start) / size);
+                if (idx < 0) idx = 0;
+                if (idx >= nbins) idx = nbins - 1;
+                counts[idx] += 1;
+            }
+            return {
+                type: 'bar',
+                name: reviewer,
+                x: centers,
+                y: counts.map((c) =>
+                    total ? (c / total) * 100 : 0,
+                ),
+                customdata: counts,
+                width: size * 0.85,
+                opacity: 0.6,
+                marker: {
+                    color: reviewerColor(reviewer, allReviewers),
+                },
+                hovertemplate:
+                    `<b>${reviewer}</b><br>` +
+                    'score ~%{x}<br>' +
+                    '%{y:.1f}% (%{customdata} reviews)<extra></extra>',
+            } as Data;
+        });
+    }, [reviews, reviewers, allReviewers]);
 
     const histLayout: Partial<Layout> = useMemo(
         () => ({
-            title: { text: 'Score distribution by reviewer' },
+            title: {
+                text: 'Score distribution by reviewer' + suffix,
+            },
             barmode: 'overlay',
-            xaxis: { title: { text: 'Score' }, range: [0, 100] },
-            yaxis: { title: { text: 'Count' } },
+            xaxis: {
+                title: { text: 'Score' + suffix },
+                range: [0, 100],
+            },
+            yaxis: { title: { text: 'Percent (%)' } },
             legend: { orientation: 'h', y: -0.2 },
         }),
-        [],
+        [suffix],
     );
 
     if (reviewers.length === 0) {
