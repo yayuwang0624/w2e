@@ -6,6 +6,7 @@ import { ReviewEntity } from './entity/review-entity';
 import { DishReviewEntity } from './entity/dish-review-entity';
 import { RestaurantEntity } from './entity/restaurant-entity';
 import { ReviewerEntity } from './entity/reviewer-entity';
+import { UserEntity } from './entity/user-entity';
 
 export const AppDataSource = new DataSource({
 	type: 'sqlite',
@@ -19,6 +20,7 @@ export const AppDataSource = new DataSource({
 		ReviewerEntity,
 		DishEntity,
 		DiningEntity,
+		UserEntity,
 	],
 	migrations: [],
 	subscribers: [],
@@ -29,3 +31,4 @@ export const DishRepo = AppDataSource.getRepository(DishEntity);
 export const RestaurantRepo = AppDataSource.getRepository(RestaurantEntity);
 export const DiningRepo = AppDataSource.getRepository(DiningEntity);
 export const DishReviewRepo = AppDataSource.getRepository(DishReviewEntity);
+export const UserRepo = AppDataSource.getRepository(UserEntity);

@@ -12,11 +12,15 @@ import {
     NavbarMenuToggle,
     NavbarMenu,
     NavbarMenuItem,
+    useDisclosure,
 } from "@heroui/react";
 
 import { usePathname } from 'next/navigation';
 
 import NextLink from 'next/link';
+
+import { useAuth } from './auth/AuthContext';
+import LoginModal from './auth/LoginModal';
 
 const pages: string[] = [
     'Home',
@@ -36,6 +40,10 @@ const ref: string[] = [
 
 function NavigationBar() {
     const [isMenuOpen] = React.useState(false);
+
+    const { user, isAuthenticated, loading, logout } =
+        useAuth();
+    const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
     const pageIdx = ref.indexOf(usePathname());
     return (
@@ -95,20 +103,50 @@ function NavigationBar() {
                 ))}
             </NavbarMenu>
             <NavbarContent justify='end'>
-                <NavbarItem className='lg:flex'>
-                    <Link href='#'>Login</Link>
-                </NavbarItem>
-                <NavbarItem>
-                    <Button
-                        as={Link}
-                        color='primary'
-                        href='#'
-                        variant='flat'
-                    >
-                        Sign Up
-                    </Button>
-                </NavbarItem>
+                {loading ? null : isAuthenticated ? (
+                    <>
+                        <NavbarItem className='hidden sm:flex'>
+                            <span className='text-default-600'>
+                                {user?.username}
+                            </span>
+                        </NavbarItem>
+                        <NavbarItem>
+                            <Button
+                                color='danger'
+                                variant='flat'
+                                onPress={logout}
+                            >
+                                Logout
+                            </Button>
+                        </NavbarItem>
+                    </>
+                ) : (
+                    <>
+                        <NavbarItem className='lg:flex'>
+                            <Link
+                                className='cursor-pointer'
+                                onPress={onOpen}
+                            >
+                                Login
+                            </Link>
+                        </NavbarItem>
+                        <NavbarItem>
+                            <Button
+                                color='primary'
+                                variant='flat'
+                                isDisabled
+                                title='Sign-up is currently closed'
+                            >
+                                Sign Up
+                            </Button>
+                        </NavbarItem>
+                    </>
+                )}
             </NavbarContent>
+            <LoginModal
+                isOpen={isOpen}
+                onOpenChange={onOpenChange}
+            />
         </Navbar>
     );
 }
