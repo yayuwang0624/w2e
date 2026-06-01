@@ -49,7 +49,7 @@ async function main() {
 	app.use(cors({ methods: ['POST'] }));
 	app.use(jsonParser());
 	app.use(server.middleware());
-	app.listen(8000);
+	app.listen(5000);
 }
 
 main();
