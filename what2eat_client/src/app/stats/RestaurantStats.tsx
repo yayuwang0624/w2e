@@ -39,8 +39,9 @@ const TIERS: {
 const RestaurantStats = (props: {
     reviews: iReview[];
     selectedReviewers: string[];
+    suffix?: string;
 }) => {
-    const { reviews, selectedReviewers } = props;
+    const { reviews, selectedReviewers, suffix = '' } = props;
     const router = useRouter();
 
     const restaurants = useMemo(
@@ -114,10 +115,11 @@ const RestaurantStats = (props: {
     const overviewLayout = useMemo<Partial<Layout>>(
         () => ({
             title: {
-                text: 'Restaurants — average score vs visits',
+                text:
+                    'Restaurants — average score vs visits' + suffix,
             },
             xaxis: {
-                title: { text: 'Average score' },
+                title: { text: 'Average score' + suffix },
                 range: [0, 100],
             },
             yaxis: {
@@ -127,7 +129,7 @@ const RestaurantStats = (props: {
             hovermode: 'closest',
             legend: { title: { text: 'Avg score' } },
         }),
-        [],
+        [suffix],
     );
 
     const pickRestaurant = (point: PlotPoint) => {
@@ -170,7 +172,10 @@ const RestaurantStats = (props: {
                     ? `${selected} — scores by reviewer (avg ${avg.toFixed(1)})`
                     : 'Pick a restaurant',
             },
-            xaxis: { title: { text: 'Score' }, range: [0, 100] },
+            xaxis: {
+                title: { text: 'Score' + suffix },
+                range: [0, 100],
+            },
             yaxis: { title: { text: 'Reviewer' }, automargin: true },
             hovermode: 'closest',
             showlegend: false,
@@ -192,7 +197,7 @@ const RestaurantStats = (props: {
                   ]
                 : [],
         }),
-        [selected, avg],
+        [selected, avg, suffix],
     );
 
     return (

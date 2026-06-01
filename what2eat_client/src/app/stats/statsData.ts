@@ -71,6 +71,58 @@ export const fetchDishReviews = async (
     }
 };
 
+export const normalizeReviews = (
+    reviews: iReview[],
+): iReview[] => {
+    const range = new Map<string, { min: number; max: number }>();
+    for (const r of reviews) {
+        const cur = range.get(r.reviewer);
+        if (!cur) {
+            range.set(r.reviewer, { min: r.score, max: r.score });
+        } else {
+            cur.min = Math.min(cur.min, r.score);
+            cur.max = Math.max(cur.max, r.score);
+        }
+    }
+    return reviews.map((r) => {
+        const { min, max } = range.get(r.reviewer)!;
+        const score =
+            max > min ? ((r.score - min) / (max - min)) * 100 : 50;
+        return { ...r, score };
+    });
+};
+
+export const rankNormalizeReviews = (
+    reviews: iReview[],
+): iReview[] => {
+    const byReviewer = new Map<string, number[]>();
+    for (const r of reviews) {
+        if (!byReviewer.has(r.reviewer)) {
+            byReviewer.set(r.reviewer, []);
+        }
+        byReviewer.get(r.reviewer)!.push(r.score);
+    }
+
+    const pctByReviewer = new Map<string, Map<number, number>>();
+    for (const [reviewer, scores] of byReviewer) {
+        const sorted = [...scores].sort((a, b) => a - b);
+        const n = sorted.length;
+        const pct = new Map<number, number>();
+        for (const value of new Set(sorted)) {
+            const first = sorted.indexOf(value);
+            const last = sorted.lastIndexOf(value);
+            const avgRank = (first + last) / 2;
+            pct.set(value, n > 1 ? (avgRank / (n - 1)) * 100 : 50);
+        }
+        pctByReviewer.set(reviewer, pct);
+    }
+
+    return reviews.map((r) => ({
+        ...r,
+        score: pctByReviewer.get(r.reviewer)!.get(r.score)!,
+    }));
+};
+
 export const mean = (values: number[]): number =>
     values.length === 0
         ? 0

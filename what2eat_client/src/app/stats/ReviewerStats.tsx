@@ -25,8 +25,9 @@ import {
 const ReviewerStats = (props: {
     reviews: iReview[];
     selectedReviewers: string[];
+    suffix?: string;
 }) => {
-    const { reviews, selectedReviewers } = props;
+    const { reviews, selectedReviewers, suffix = '' } = props;
     const router = useRouter();
 
     const allReviewers = useMemo(
@@ -59,10 +60,17 @@ const ReviewerStats = (props: {
         if (uuid) router.push(`/reviews?focus=${uuid}`);
     };
 
-    const scatterData = useMemo(() => {
+    // Axis bounds from the full dataset so they don't shift with selection.
+    const bounds = useMemo(() => {
         const scores = reviews.map((r) => r.score);
-        const lo = Math.min(...scores, ...means.values()) - 3;
-        const hi = Math.max(...scores, ...means.values()) + 3;
+        return {
+            lo: Math.min(...scores, ...means.values()) - 3,
+            hi: Math.max(...scores, ...means.values()) + 3,
+        };
+    }, [reviews, means]);
+
+    const scatterData = useMemo(() => {
+        const { lo, hi } = bounds;
 
         const traces: Data[] = reviewers.map((reviewer) => {
             const rs = reviews.filter(
@@ -101,17 +109,26 @@ const ReviewerStats = (props: {
         } as Data);
 
         return traces;
-    }, [reviews, reviewers, allReviewers, means]);
+    }, [reviewers, allReviewers, means, bounds]);
 
     const scatterLayout: Partial<Layout> = useMemo(
         () => ({
-            title: { text: 'Reviewer score vs restaurant average' },
-            xaxis: { title: { text: 'Restaurant average score' } },
-            yaxis: { title: { text: 'This reviewer’s score' } },
+            title: {
+                text:
+                    'Reviewer score vs restaurant average' + suffix,
+            },
+            xaxis: {
+                title: { text: 'Restaurant average score' + suffix },
+                range: [bounds.lo, bounds.hi],
+            },
+            yaxis: {
+                title: { text: 'This reviewer’s score' + suffix },
+                range: [bounds.lo, bounds.hi],
+            },
             hovermode: 'closest',
             legend: { orientation: 'h', y: -0.2 },
         }),
-        [],
+        [suffix, bounds],
     );
 
     const histData = useMemo(
