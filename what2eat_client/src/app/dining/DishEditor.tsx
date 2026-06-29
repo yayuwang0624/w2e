@@ -21,6 +21,7 @@ import {
 	AutocompleteItem,
 } from '@heroui/react';
 import { Restaurant } from './DiningEditor';
+import { useAuth } from '@/app/auth/AuthContext';
 
 interface IDish {
 	restaurant: string;
@@ -67,6 +68,7 @@ const DishEditor = ({
 	diningRestaurant,
 	setDiningRestaurant,
 }: DishEditorProps) => {
+	const { token } = useAuth();
 	const [restaurants, setRestaurants] = useState<
 		Restaurant[]
 	>([]);
@@ -100,10 +102,10 @@ const DishEditor = ({
 					data.restaurant as string,
 					dish,
 				);
-				const addDishBody = JRPCBody(
-					'add_dish',
-					newDishes,
-				);
+				const addDishBody = JRPCBody('add_dish', {
+					...newDishes,
+					token,
+				});
 				setSubmitted(newDishes);
 				const response = await JRPCRequest(
 					addDishBody,

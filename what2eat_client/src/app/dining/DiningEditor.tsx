@@ -26,6 +26,8 @@ import {
 
 import { v4 as UUID } from 'uuid';
 
+import { useAuth } from '@/app/auth/AuthContext';
+
 interface Dining {
 	uuid: string;
 	unixTimestamp: number;
@@ -74,6 +76,7 @@ type DiningProps = {
 const DiningEditor = ({
 	setDiningRestaurant,
 }: DiningProps) => {
+	const { token } = useAuth();
 	const [submitted, setSubmitted] =
 		useState<Dining | null>(null);
 	const [submitResp, setSubmitResp] =
@@ -99,10 +102,10 @@ const DiningEditor = ({
 			people: Number(data.people || 0),
 			price: Number(data.price || 0),
 		};
-		const getDiningBody = JRPCBody(
-			'add_dining',
-			dining,
-		);
+		const getDiningBody = JRPCBody('add_dining', {
+			...dining,
+			token,
+		});
 
 		setSubmitted(dining);
 		const response = await JRPCRequest(getDiningBody);

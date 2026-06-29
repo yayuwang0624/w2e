@@ -7,37 +7,44 @@ import { RestaurantEntity } from '../entity/restaurant-entity';
 import { AddReviewRequest } from '../interface/request';
 import { DishEntity } from '../entity/dish-entity';
 import { RestaurantRepo, DishRepo } from '../data-source';
+import { ensureActiveUser } from '../auth/require-auth';
 
 export const AddDish = async (
-    dish: DishEntity,
-    callback: (e: ErrorResponse | null, m?: string) => void,
+	dish: DishEntity & { token?: string },
+	callback: (e: ErrorResponse | null, m?: string) => void,
 ) => {
-    let restaurant: RestaurantEntity =
-        new RestaurantEntity();
-    console.log(dish);
-    restaurant.name = dish.restaurant;
-    await RestaurantRepo.upsert(restaurant, ['name']);
+	if (!(await ensureActiveUser(dish.token, callback)))
+		return;
 
-    let ret = await DishRepo.upsert(dish, ["restaurant", "name"]);
-    console.log(ret);
-    if (ret == null) {
-        const error: ErrorResponse = new ErrorResponse(
-            400,
-            'Adding dish failed',
-        );
-        callback(error);
-    } else {
-        callback(null, JSON.stringify(dish.name));
-    }
+	let restaurant: RestaurantEntity =
+		new RestaurantEntity();
+	console.log(dish);
+	restaurant.name = dish.restaurant;
+	await RestaurantRepo.upsert(restaurant, ['name']);
+
+	let ret = await DishRepo.upsert(dish, [
+		'restaurant',
+		'name',
+	]);
+	console.log(ret);
+	if (ret == null) {
+		const error: ErrorResponse = new ErrorResponse(
+			400,
+			'Adding dish failed',
+		);
+		callback(error);
+	} else {
+		callback(null, JSON.stringify(dish.name));
+	}
 };
 
 export const AddDishes = async (
-    dishes: DishEntity[],
-    callback: (e: ErrorResponse | null, m?: string) => void,
+	dishes: DishEntity[],
+	callback: (e: ErrorResponse | null, m?: string) => void,
 ) => {
-    const error: ErrorResponse = new ErrorResponse(
-        300,
-        'Not implemented',
-    );
-    callback(error);
+	const error: ErrorResponse = new ErrorResponse(
+		300,
+		'Not implemented',
+	);
+	callback(error);
 };

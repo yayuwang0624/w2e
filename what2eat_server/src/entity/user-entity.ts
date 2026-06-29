@@ -1,24 +1,30 @@
 import {
-    Entity,
-    PrimaryColumn,
-    Column,
-    CreateDateColumn,
+	Entity,
+	PrimaryColumn,
+	Column,
+	CreateDateColumn,
 } from 'typeorm';
 
 @Entity({ name: 'user' })
 export class UserEntity {
-    @PrimaryColumn('text')
-    username: string;
+	@PrimaryColumn('text')
+	username: string;
 
-    @Column({ type: 'text' })
-    passwordHash: string;
+	@Column({ type: 'text' })
+	passwordHash: string;
 
-    @Column({ type: 'text' })
-    salt: string;
+	@Column({ type: 'text' })
+	salt: string;
 
-    @Column({ type: 'text', default: 'user' })
-    role: string;
+	@Column({ type: 'text', default: 'user' })
+	role: string;
 
-    @CreateDateColumn()
-    createdAt: Date;
+	@Column({ type: 'boolean', default: false })
+	active: boolean;
+
+	@Column({ type: 'text', nullable: true, unique: true })
+	reviewer: string | null;
+
+	@CreateDateColumn()
+	createdAt: Date;
 }

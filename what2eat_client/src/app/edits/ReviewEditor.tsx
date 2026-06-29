@@ -20,6 +20,7 @@ import React from 'react';
 import { useState, useMemo, useEffect } from 'react';
 import { v4 as UUID } from 'uuid';
 import { Dish, Dining } from '@/app/dining/DishEditor';
+import { useAuth } from '@/app/auth/AuthContext';
 
 interface reviewForm {
 	dining: string;
@@ -33,10 +34,6 @@ interface reviewForm {
 	comment: string;
 	date: Date;
 	uuid: string;
-}
-
-interface IReviewer {
-	name: string;
 }
 
 function screenWidthToSize() {
@@ -55,12 +52,13 @@ function screenWidthToSize() {
 }
 
 const ReviewEditor = () => {
+	const { token, user } = useAuth();
+	const linkedReviewer = user?.reviewer ?? '';
 	const [submitted, setSubmitted] =
 		useState<reviewForm | null>(null);
 	const [submitResp, setSubmitResp] = useState(null);
 	const [errors, setErrors] = useState<any>({});
 
-	const [reviewers, setReviewers] = useState([]);
 	const [dining, setDining] = useState('');
 	const [dinings, setDinings] = useState([]);
 	const [reviewer, setReviewer] = useState('');
@@ -101,17 +99,7 @@ const ReviewEditor = () => {
 		);
 	};
 
-	const getReviewers = async () => {
-		const getReviewersBody = JRPCBody('get_reviewers');
-		const response = await JRPCRequest(
-			getReviewersBody,
-		);
-		const reviewers = JSON.parse(response.result);
-		setReviewers(reviewers);
-	};
-
 	useEffect(() => {
-		getReviewers();
 		GetDinings((dinings: any) => {
 			setDinings(dinings.reverse());
 		});
@@ -315,8 +303,12 @@ const ReviewEditor = () => {
 		);
 	}, [candDishes, dishes, dishScores, dishComments]);
 
+	useEffect(() => {
+		setReviewer(linkedReviewer);
+	}, [linkedReviewer]);
+
 	const resetForm = () => {
-		setReviewer('');
+		setReviewer(linkedReviewer);
 		setDining('');
 		setRestaurnt('');
 		setDiningScore(0);
@@ -405,7 +397,7 @@ const ReviewEditor = () => {
 		setSubmitted(review);
 		const addReviewBody: any = JRPCBody(
 			'submit_review_form',
-			review,
+			{ ...review, token },
 		);
 		try {
 			const response = await JRPCRequest(
@@ -431,41 +423,15 @@ const ReviewEditor = () => {
 				Review
 			</h1>
 			<div className='flex flex-col items-center gap-4 w-full'>
-				<Autocomplete
-					isRequired
-					defaultItems={reviewers}
-					errorMessage={({
-						validationDetails,
-					}) => {
-						if (
-							validationDetails.valueMissing
-						) {
-							return 'Please select the reviewer';
-						}
-
-						return errors.name;
-					}}
+				<Input
+					isReadOnly
+					isDisabled
 					label='Reviewer'
 					size={windowSize}
 					name='reviewer'
-					// placeholder='Select Reviewer'
-					variant='bordered'
-					popoverProps={{
-						shouldCloseOnScroll: false,
-					}}
-					selectedKey={reviewer}
-					onSelectionChange={(sel) => {
-						setReviewer(sel as string);
-					}}
-				>
-					{(reviewer: IReviewer) => (
-						<AutocompleteItem
-							key={reviewer.name}
-						>
-							{reviewer.name}
-						</AutocompleteItem>
-					)}
-				</Autocomplete>
+					variant='faded'
+					value={linkedReviewer}
+				/>
 
 				<Autocomplete
 					isRequired

@@ -6,39 +6,43 @@ import { RestaurantEntity } from '../entity/restaurant-entity';
 import { AddReviewRequest } from '../interface/request';
 import { DishEntity } from '../entity/dish-entity';
 import {
-    RestaurantRepo,
-    DishRepo,
-    ReviewRepo,
-    DiningRepo,
+	RestaurantRepo,
+	DishRepo,
+	ReviewRepo,
+	DiningRepo,
 } from '../data-source';
+import { ensureActiveUser } from '../auth/require-auth';
 
 export const AddReview = async (
-    review: ReviewEntity,
-    callback: (e: ErrorResponse | null, m?: string) => void,
+	review: ReviewEntity & { token?: string },
+	callback: (e: ErrorResponse | null, m?: string) => void,
 ) => {
-    console.log(review);
+	if (!(await ensureActiveUser(review.token, callback)))
+		return;
 
-    let restaurant: RestaurantEntity =
-        new RestaurantEntity();
-    restaurant.name = review.restaurant;
-    await RestaurantRepo.upsert(restaurant, ['name']);
-    // let dishEntity: DishEntity = new DishEntity();
+	console.log(review);
 
-    // dishEntity.restaurant = review.restaurant;
-    // for (let dish of dishes) {
-    //     dishEntity.name = dish;
-    //     await DishRepo.upsert(dishEntity, ['name', 'restaurant']);
-    // }
+	let restaurant: RestaurantEntity =
+		new RestaurantEntity();
+	restaurant.name = review.restaurant;
+	await RestaurantRepo.upsert(restaurant, ['name']);
+	// let dishEntity: DishEntity = new DishEntity();
 
-    let ret = ReviewRepo.save(review);
-    console.log(ret);
-    if (ret == null) {
-        const error: ErrorResponse = new ErrorResponse(
-            400,
-            'Insert review failed',
-        );
-        callback(error);
-    } else {
-        callback(null, 'review updated');
-    }
+	// dishEntity.restaurant = review.restaurant;
+	// for (let dish of dishes) {
+	//     dishEntity.name = dish;
+	//     await DishRepo.upsert(dishEntity, ['name', 'restaurant']);
+	// }
+
+	let ret = ReviewRepo.save(review);
+	console.log(ret);
+	if (ret == null) {
+		const error: ErrorResponse = new ErrorResponse(
+			400,
+			'Insert review failed',
+		);
+		callback(error);
+	} else {
+		callback(null, 'review updated');
+	}
 };
