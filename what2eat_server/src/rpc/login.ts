@@ -47,6 +47,7 @@ export const Login = async (
 				username: user.username,
 				role: user.role,
 				reviewer: user.reviewer,
+				active: user.active,
 			},
 		}),
 	);

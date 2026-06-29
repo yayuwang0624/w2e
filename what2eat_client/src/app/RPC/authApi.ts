@@ -7,6 +7,7 @@ export interface AuthUser {
 	username: string;
 	role: string;
 	reviewer?: string | null;
+	active?: boolean;
 }
 
 export interface LoginResult {
