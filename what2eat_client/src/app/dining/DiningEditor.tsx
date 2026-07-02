@@ -163,6 +163,34 @@ const DiningEditor = ({
 				value={time}
 				onChange={setTime}
 			/>
+			<div className='flex w-full gap-3'>
+				<Input
+					radius='sm'
+					size='md'
+					variant='bordered'
+					type='number'
+					min={0}
+					name='people'
+					label='People'
+					placeholder='0'
+				/>
+				<Input
+					radius='sm'
+					size='md'
+					variant='bordered'
+					type='number'
+					min={0}
+					step='0.01'
+					name='price'
+					label='Price'
+					placeholder='0.00'
+					startContent={
+						<span className='text-default-400 text-small'>
+							$
+						</span>
+					}
+				/>
+			</div>
 			<Button
 				type='submit'
 				color='primary'
