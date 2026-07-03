@@ -74,10 +74,10 @@ Extract the meal into structured data. Follow these rules:
 
 - restaurant: Match the receipt's restaurant to the CLOSEST name in the existing list below and return that exact string, setting matchedExisting=true. Existing names often carry a Chinese name plus an English name — return the whole string verbatim. If nothing matches, return the restaurant as printed and set matchedExisting=false.
 - datetime: The receipt's date and time as "YYYY-MM-DDTHH:mm:ss" (24h, no timezone). If only a date is shown, use "T00:00:00". If none, return "".
-- price: The GRAND TOTAL including tax (the final amount paid). A number, e.g. 100.76.
-- people: Party size if the receipt states it; otherwise 0.
+- people: Party size if the receipt states it (including any "split N ways" note). If it's not stated anywhere, assume 1 — don't guess a headcount just to satisfy the price rule below.
+- price: The cost PER PERSON, including tax — this app tracks per-person spend, not the whole table's bill. If the receipt already prints a per-person split amount, use that figure directly and set people to the stated split count. Otherwise, check whether the receipt states the number of people. If it does, divide the grand total by that number. If it does not, just use the grand total as price and leave people at 0; do not divide anything.
 - items: One entry per line item that is an actual dish. Skip pure staples like plain rice unless it's clearly a dish.
-  - nameCn: the FULL proper Chinese dish name. Receipts abbreviate ("Fr Yellow Beef", "Steam Ck w Chilli Sa") — expand to the real name (金牌小炒黄牛肉, 口水鸡). If a Chinese name is printed, prefer it.
+  - nameCn: this is the canonical dish name used as the record's identity, so it must never be blank. the FULL proper Chinese dish name, in SIMPLIFIED Chinese characters. Receipts abbreviate dish names — expand each abbreviation to the real full dish name. If a Chinese name is printed, prefer it, converting it to simplified Chinese if it's written in traditional Chinese. If the restaurant is clearly non-Chinese (no Chinese characters anywhere on the receipt), set nameCn to the same clean English dish name you put in nameEn — do not invent a Chinese name for it.
   - nameEn: a clean English name (expand the abbreviation).
   - qty: quantity for that line.
   - price: line total.

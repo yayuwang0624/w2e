@@ -112,6 +112,28 @@ const DiningEditor = ({
 	const [time, setTime] = useState<ZonedDateTime | null>(
 		draftTime(draft?.datetime),
 	);
+	const [people, setPeople] = useState<number>(
+		draft?.people || 0,
+	);
+	const [price, setPrice] = useState<number>(
+		draft?.price || 0,
+	);
+
+	const onPeopleChange = (value: string) => {
+		const newPeople = Number(value) || 0;
+		if (newPeople > 0 && people === 0) {
+			setPrice(
+				Math.round((price / newPeople) * 100) / 100,
+			);
+		} else if (newPeople > 0 && people > 0) {
+			setPrice(
+				Math.round(
+					((price * people) / newPeople) * 100,
+				) / 100,
+			);
+		}
+		setPeople(newPeople);
+	};
 
 	const onSubmit = async (event: any) => {
 		event.preventDefault();
@@ -199,11 +221,10 @@ const DiningEditor = ({
 					name='people'
 					label='People'
 					placeholder='0'
-					defaultValue={
-						draft?.people
-							? String(draft.people)
-							: undefined
+					value={
+						people ? String(people) : ''
 					}
+					onValueChange={onPeopleChange}
 				/>
 				<Input
 					radius='sm'
@@ -213,12 +234,13 @@ const DiningEditor = ({
 					min={0}
 					step='0.01'
 					name='price'
-					label='Price'
+					label='Price / person'
 					placeholder='0.00'
-					defaultValue={
-						draft?.price
-							? String(draft.price)
-							: undefined
+					value={
+						price ? String(price) : ''
+					}
+					onValueChange={(value: string) =>
+						setPrice(Number(value) || 0)
 					}
 					startContent={
 						<span className='text-default-400 text-small'>
