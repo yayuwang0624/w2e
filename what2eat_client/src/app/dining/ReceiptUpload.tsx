@@ -1,15 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '@heroui/react';
 import {
 	ParseReceipt,
 	ReceiptDraft,
 } from '@/app/RPC/JRPCRequest';
 import { useAuth } from '@/app/auth/AuthContext';
 
-// Downscale to a max long-edge so uploads stay small and the model
-// isn't billed for a huge image. Returns { base64, mediaType }.
 const downscale = (
 	file: File,
 	maxEdge = 1600,
@@ -58,13 +55,14 @@ const ReceiptUpload = ({ onDraft }: ReceiptUploadProps) => {
 	const { token, user } = useAuth();
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [dragging, setDragging] = useState(false);
 	const inputRef = React.useRef<HTMLInputElement>(null);
 
-	const onFile = async (
-		e: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		const file = e.target.files?.[0];
-		if (!file) return;
+	const processFile = async (file: File) => {
+		if (!file.type.startsWith('image/')) {
+			setError('please drop an image file');
+			return;
+		}
 		setError(null);
 		setLoading(true);
 		try {
@@ -86,7 +84,29 @@ const ReceiptUpload = ({ onDraft }: ReceiptUploadProps) => {
 		}
 	};
 
-	// Server enforces admin-only too; this just hides the UI.
+	const onInputChange = (
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const file = e.target.files?.[0];
+		if (file) processFile(file);
+	};
+
+	const onDrop = (e: React.DragEvent) => {
+		e.preventDefault();
+		setDragging(false);
+		if (loading) return;
+		const file = e.dataTransfer.files?.[0];
+		if (file) processFile(file);
+	};
+
+	const onPaste = (e: React.ClipboardEvent) => {
+		if (loading) return;
+		const file = Array.from(e.clipboardData.items)
+			.find((i) => i.type.startsWith('image/'))
+			?.getAsFile();
+		if (file) processFile(file);
+	};
+
 	if (user?.role !== 'admin') return null;
 
 	return (
@@ -97,21 +117,39 @@ const ReceiptUpload = ({ onDraft }: ReceiptUploadProps) => {
 				accept='image/*'
 				capture='environment'
 				className='hidden'
-				onChange={onFile}
+				onChange={onInputChange}
 			/>
-			<Button
-				color='secondary'
-				variant='bordered'
-				radius='sm'
-				fullWidth={true}
-				className='font-bold text-base'
-				isLoading={loading}
-				onPress={() => inputRef.current?.click()}
+			<div
+				role='button'
+				tabIndex={0}
+				onClick={() => inputRef.current?.click()}
+				onKeyDown={(e) => {
+					if (e.key === 'Enter' || e.key === ' ')
+						inputRef.current?.click();
+				}}
+				onPaste={onPaste}
+				onDrop={onDrop}
+				onDragOver={(e) => {
+					e.preventDefault();
+					if (!dragging) setDragging(true);
+				}}
+				onDragLeave={() => setDragging(false)}
+				className={`w-full flex flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed px-4 py-6 text-center cursor-pointer transition-colors ${
+					dragging
+						? 'border-secondary bg-secondary/10'
+						: 'border-default-300 hover:border-secondary'
+				}`}
 			>
-				{loading
-					? 'Reading receipt…'
-					: '📷 Scan receipt'}
-			</Button>
+				<span className='font-bold text-base'>
+					{loading
+						? 'Reading receipt…'
+						: 'Scan receipt'}
+				</span>
+				<span className='text-small text-default-500'>
+					Drag &amp; drop, paste, or click to
+					upload a photo
+				</span>
+			</div>
 			{error && (
 				<p className='text-small text-danger'>
 					{error}
