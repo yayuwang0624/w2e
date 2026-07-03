@@ -38,6 +38,6 @@ export class DiningEntity implements Dining {
     @Column({ nullable: true })
     people: number;
 
-    @Column({ nullable: true })
+    @Column({ type: 'real', nullable: true })
     price: number;
 }
