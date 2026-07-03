@@ -86,8 +86,12 @@ const draftTime = (
 				parseDateTime(datetime),
 				getLocalTimeZone(),
 			);
-		} catch {
-			/* fall through to now() */
+		} catch (e) {
+			console.warn(
+				'[dining] could not parse datetime',
+				datetime,
+				e,
+			);
 		}
 	}
 	return now(getLocalTimeZone());
@@ -137,7 +141,7 @@ const DiningEditor = ({
 
 	useEffect(() => {
 		GetRestaurants(setRestaurants);
-		setTime(now(getLocalTimeZone()));
+		setTime(draftTime(draft?.datetime));
 	}, []);
 
 	useLayoutEffect(() => {}, []);

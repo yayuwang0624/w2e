@@ -69,16 +69,11 @@ const ReceiptUpload = ({ onDraft }: ReceiptUploadProps) => {
 			const { base64, mediaType } = await downscale(
 				file,
 			);
-			console.log(
-				'[receipt] sending to parse_receipt',
-				{ mediaType, bytes: base64.length },
-			);
 			const draft = await ParseReceipt(
 				base64,
 				mediaType,
 				token,
 			);
-			console.log('[receipt] draft received', draft);
 			if (!draft.items || draft.items.length === 0) {
 				setError(
 					'no dishes detected on the receipt',
@@ -86,7 +81,6 @@ const ReceiptUpload = ({ onDraft }: ReceiptUploadProps) => {
 			}
 			onDraft(draft);
 		} catch (err: any) {
-			console.error('[receipt] parse failed', err);
 			setError(err?.message || 'failed to read receipt');
 		} finally {
 			setLoading(false);
