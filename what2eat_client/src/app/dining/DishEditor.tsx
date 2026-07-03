@@ -62,11 +62,13 @@ export class Dish implements IDish {
 type DishEditorProps = {
 	diningRestaurant: string;
 	setDiningRestaurant: (restaurant: string) => void;
+	initialDishes?: string[];
 };
 
 const DishEditor = ({
 	diningRestaurant,
 	setDiningRestaurant,
+	initialDishes,
 }: DishEditorProps) => {
 	const { token } = useAuth();
 	const [restaurants, setRestaurants] = useState<
@@ -80,7 +82,11 @@ const DishEditor = ({
 	);
 	const [submitResp, setSubmitResp] =
 		React.useState(null);
-	const [dishes, setDishes] = useState(['']);
+	const [dishes, setDishes] = useState<string[]>(
+		initialDishes && initialDishes.length
+			? [...initialDishes, '']
+			: [''],
+	);
 
 	const onDiningChange = async (restaurant: string) => {
 		console.log('onDiningChange', restaurant);

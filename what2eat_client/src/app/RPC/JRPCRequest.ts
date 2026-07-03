@@ -63,6 +63,42 @@ export const GetDinings = async (
     }
 };
 
+export interface ReceiptDraftItem {
+    nameCn: string;
+    nameEn: string;
+    qty: number;
+    price: number;
+    isNew: boolean;
+}
+
+export interface ReceiptDraft {
+    restaurant: string;
+    matchedExisting: boolean;
+    datetime: string;
+    people: number;
+    price: number;
+    items: ReceiptDraftItem[];
+}
+
+export const ParseReceipt = async (
+    image: string,
+    mediaType: string,
+    token: string | null,
+): Promise<ReceiptDraft> => {
+    const body = JRPCBody('parse_receipt', {
+        image,
+        mediaType,
+        token,
+    });
+    const response = await JRPCRequest(body);
+    if (response.error) {
+        throw new Error(
+            response.error.message || 'parse failed',
+        );
+    }
+    return JSON.parse(response.result) as ReceiptDraft;
+};
+
 export const GetDishesByRestaurant = async (
     restaurant: string,
 ) => {

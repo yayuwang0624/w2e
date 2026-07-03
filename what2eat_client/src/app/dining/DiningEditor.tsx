@@ -9,7 +9,10 @@ import {
 	ZonedDateTime,
 	getLocalTimeZone,
 	now,
+	parseDateTime,
+	toZoned,
 } from '@internationalized/date';
+import { ReceiptDraft } from '@/app/RPC/JRPCRequest';
 import { Button, DatePicker } from '@heroui/react';
 import React, {
 	useEffect,
@@ -71,10 +74,28 @@ class DiningForm implements Dining {
 
 type DiningProps = {
 	setDiningRestaurant: (restaurant: string) => void;
+	draft?: ReceiptDraft | null;
+};
+
+const draftTime = (
+	datetime?: string,
+): ZonedDateTime => {
+	if (datetime) {
+		try {
+			return toZoned(
+				parseDateTime(datetime),
+				getLocalTimeZone(),
+			);
+		} catch {
+			/* fall through to now() */
+		}
+	}
+	return now(getLocalTimeZone());
 };
 
 const DiningEditor = ({
 	setDiningRestaurant,
+	draft,
 }: DiningProps) => {
 	const { token } = useAuth();
 	const [submitted, setSubmitted] =
@@ -85,7 +106,7 @@ const DiningEditor = ({
 		Restaurant[]
 	>([]);
 	const [time, setTime] = useState<ZonedDateTime | null>(
-		now(getLocalTimeZone()),
+		draftTime(draft?.datetime),
 	);
 
 	const onSubmit = async (event: any) => {
@@ -138,6 +159,7 @@ const DiningEditor = ({
 				name='restaurant'
 				label='Restaurant'
 				allowsCustomValue={true}
+				defaultInputValue={draft?.restaurant}
 				defaultItems={restaurants}
 				popoverProps={{
 					shouldCloseOnScroll: false,
@@ -173,6 +195,11 @@ const DiningEditor = ({
 					name='people'
 					label='People'
 					placeholder='0'
+					defaultValue={
+						draft?.people
+							? String(draft.people)
+							: undefined
+					}
 				/>
 				<Input
 					radius='sm'
@@ -184,6 +211,11 @@ const DiningEditor = ({
 					name='price'
 					label='Price'
 					placeholder='0.00'
+					defaultValue={
+						draft?.price
+							? String(draft.price)
+							: undefined
+					}
 					startContent={
 						<span className='text-default-400 text-small'>
 							$

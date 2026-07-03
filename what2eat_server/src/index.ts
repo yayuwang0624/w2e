@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import * as jayson from 'jayson';
 import { AppDataSource } from './data-source';
 import * as cors from 'cors';
@@ -20,6 +21,7 @@ import { SubmitReviewForm } from './rpc/submit-review-form';
 import { Login } from './rpc/login';
 import { Me } from './rpc/me';
 import { Register } from './rpc/register';
+import { ParseReceipt } from './rpc/parse-receipt';
 
 async function main() {
 	const app = connect();
@@ -41,6 +43,7 @@ async function main() {
 		login: Login,
 		me: Me,
 		register: Register,
+		parse_receipt: ParseReceipt,
 	});
 
 	await AppDataSource.initialize();
@@ -49,7 +52,7 @@ async function main() {
 
 	app.use(morgan('combined'));
 	app.use(cors({ methods: ['POST'] }));
-	app.use(jsonParser());
+	app.use(jsonParser({ limit: '15mb' }));
 	app.use(server.middleware());
 	app.listen(5000);
 }
