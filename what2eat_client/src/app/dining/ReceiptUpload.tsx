@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
 	ParseReceipt,
 	ReceiptDraft,
@@ -69,13 +69,24 @@ const ReceiptUpload = ({ onDraft }: ReceiptUploadProps) => {
 			const { base64, mediaType } = await downscale(
 				file,
 			);
+			console.log(
+				'[receipt] sending to parse_receipt',
+				{ mediaType, bytes: base64.length },
+			);
 			const draft = await ParseReceipt(
 				base64,
 				mediaType,
 				token,
 			);
+			console.log('[receipt] draft received', draft);
+			if (!draft.items || draft.items.length === 0) {
+				setError(
+					'no dishes detected on the receipt',
+				);
+			}
 			onDraft(draft);
 		} catch (err: any) {
+			console.error('[receipt] parse failed', err);
 			setError(err?.message || 'failed to read receipt');
 		} finally {
 			setLoading(false);
@@ -99,13 +110,22 @@ const ReceiptUpload = ({ onDraft }: ReceiptUploadProps) => {
 		if (file) processFile(file);
 	};
 
-	const onPaste = (e: React.ClipboardEvent) => {
-		if (loading) return;
-		const file = Array.from(e.clipboardData.items)
-			.find((i) => i.type.startsWith('image/'))
-			?.getAsFile();
-		if (file) processFile(file);
-	};
+	useEffect(() => {
+		if (user?.role !== 'admin') return;
+		const handler = (e: ClipboardEvent) => {
+			if (loading || !e.clipboardData) return;
+			const file = Array.from(e.clipboardData.items)
+				.find((i) => i.type.startsWith('image/'))
+				?.getAsFile();
+			if (file) {
+				e.preventDefault();
+				processFile(file);
+			}
+		};
+		window.addEventListener('paste', handler);
+		return () =>
+			window.removeEventListener('paste', handler);
+	}, [loading, token, user?.role]);
 
 	if (user?.role !== 'admin') return null;
 
@@ -127,7 +147,6 @@ const ReceiptUpload = ({ onDraft }: ReceiptUploadProps) => {
 					if (e.key === 'Enter' || e.key === ' ')
 						inputRef.current?.click();
 				}}
-				onPaste={onPaste}
 				onDrop={onDrop}
 				onDragOver={(e) => {
 					e.preventDefault();

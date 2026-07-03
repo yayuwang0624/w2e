@@ -41,6 +41,9 @@ const Dining = () => {
 						initialDishes={draft?.items.map(
 							(i) => i.nameCn,
 						)}
+						initialDishHints={draft?.items.map(
+							(i) => i.nameEn,
+						)}
 						setDiningRestaurant={
 							setDiningRestaurant
 						}

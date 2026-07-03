@@ -63,12 +63,14 @@ type DishEditorProps = {
 	diningRestaurant: string;
 	setDiningRestaurant: (restaurant: string) => void;
 	initialDishes?: string[];
+	initialDishHints?: string[];
 };
 
 const DishEditor = ({
 	diningRestaurant,
 	setDiningRestaurant,
 	initialDishes,
+	initialDishHints,
 }: DishEditorProps) => {
 	const { token } = useAuth();
 	const [restaurants, setRestaurants] = useState<
@@ -173,7 +175,12 @@ const DishEditor = ({
 			radius='sm'
 			size='lg'
 			variant='bordered'
-			value={value}
+			inputValue={value}
+			description={
+				value === initialDishes?.[index]
+					? initialDishHints?.[index]
+					: undefined
+			}
 			allowsCustomValue={true}
 			defaultItems={candDishes}
 			popoverProps={{
