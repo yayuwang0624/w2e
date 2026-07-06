@@ -123,6 +123,12 @@ const ReviewEditor = () => {
 		setDishComments(allDishComments);
 	};
 
+	const onClearAllDishes = () => {
+		setDishes(['']);
+		setDishScores([0]);
+		setDishComments(['']);
+	};
+
 	const onDishSelectChange = (
 		index: number,
 		value: string,
@@ -133,31 +139,17 @@ const ReviewEditor = () => {
 		const updatedDishes = [...currentDishes];
 		const updatedScores = [...currentScores];
 		const updatedComments = [...currentComments];
+		const isLastRow = index === updatedDishes.length - 1;
 		updatedDishes[index] = value;
 		updatedScores[index] = Number(diningScore);
-		if (
-			index === updatedDishes.length - 1 &&
-			value !== ''
-		) {
+		if (isLastRow && value !== '') {
 			updatedDishes.push('');
 			updatedScores.push(0);
 			updatedComments.push('');
-		} else if (index === updatedDishes.length - 2) {
-			let resized = false;
-			while (
-				index >= 0 &&
-				(updatedDishes[index] === null ||
-					updatedDishes[index] === '')
-			) {
-				resized = true;
-				updatedDishes.splice(index, 1);
-				updatedScores.splice(index, 1);
-				updatedComments.splice(index, 1);
-				--index;
-			}
 		}
 		setDishes(updatedDishes);
 		setDishScores(updatedScores);
+		setDishComments(updatedComments);
 	};
 
 	const onDishScoreChange = (
@@ -170,6 +162,21 @@ const ReviewEditor = () => {
 			? 0
 			: parseFloat(value);
 		setDishScores(updatedScores);
+	};
+
+	const onRemoveDish = (index: number) => {
+		if (index === dishes.length - 1) {
+			return;
+		}
+		const updatedDishes = [...dishes];
+		const updatedScores = [...dishScores];
+		const updatedComments = [...dishComments];
+		updatedDishes.splice(index, 1);
+		updatedScores.splice(index, 1);
+		updatedComments.splice(index, 1);
+		setDishes(updatedDishes);
+		setDishScores(updatedScores);
+		setDishComments(updatedComments);
 	};
 
 	const onDishCommentChange = (
@@ -214,7 +221,7 @@ const ReviewEditor = () => {
 			<>
 				{dishes.map((value, index) => (
 					<div
-						className='flex flex-row justify-between w-full gap-[2%]'
+						className='flex flex-row items-center justify-between w-full gap-[2%]'
 						key={index}
 					>
 						{
@@ -297,6 +304,20 @@ const ReviewEditor = () => {
 							}
 							type='number'
 						/>
+						{index !== dishes.length - 1 && (
+							<Button
+								isIconOnly
+								variant='light'
+								color='danger'
+								size={windowSize}
+								aria-label='Remove dish'
+								onPress={() =>
+									onRemoveDish(index)
+								}
+							>
+								✕
+							</Button>
+						)}
 					</div>
 				))}
 			</>
@@ -375,7 +396,6 @@ const ReviewEditor = () => {
 			}
 		}
 
-		// Clear errors and submit
 		setErrors({});
 		const resSplit = restaurant.split(' | ');
 		const diningId = resSplit[resSplit.length - 1];
@@ -499,13 +519,21 @@ const ReviewEditor = () => {
 					/>
 				</div>
 
-				<Button
-					variant='bordered'
-					onPress={onSelectAllDishes}
-					className='mr-auto'
-				>
-					Select All Dishes
-				</Button>
+				<div className='flex flex-row gap-2 mr-auto'>
+					<Button
+						variant='bordered'
+						onPress={onSelectAllDishes}
+					>
+						Select All Dishes
+					</Button>
+
+					<Button
+						variant='bordered'
+						onPress={onClearAllDishes}
+					>
+						Clear All
+					</Button>
+				</div>
 
 				{dishFields}
 
