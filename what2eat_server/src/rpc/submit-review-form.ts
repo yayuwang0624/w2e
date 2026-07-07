@@ -39,36 +39,50 @@ export const SubmitReviewForm = async (
 
 	console.log(review);
 
-	let reviewEntity = new ReviewEntity();
-	reviewEntity.reviewer = user.reviewer;
-	reviewEntity.dining = review.dining;
-	reviewEntity.restaurant = review.restaurant;
-	reviewEntity.score = review.score;
-	reviewEntity.comment = review.comment;
+	try {
+		let reviewEntity = new ReviewEntity();
+		reviewEntity.reviewer = user.reviewer;
+		reviewEntity.dining = review.dining;
+		reviewEntity.restaurant = review.restaurant;
+		reviewEntity.score = review.score;
+		reviewEntity.comment = review.comment;
 
-	let savedReview = await ReviewRepo.save(reviewEntity);
-	console.log(savedReview);
-	if (savedReview == null) {
-		const error: ErrorResponse = new ErrorResponse(
-			400,
-			'Insert review failed',
+		let savedReview = await ReviewRepo.save(
+			reviewEntity,
 		);
-		callback(error);
-	} else {
-		review.dishes.forEach(async (value, index) => {
-			if (value != '') {
-				let dishReviewEntity =
-					new DishReviewEntity();
-				dishReviewEntity.review_id =
-					savedReview.uuid;
-				dishReviewEntity.dish = value;
-				dishReviewEntity.score =
-					review.scores[index];
-				dishReviewEntity.comment =
-					review.dishComments[index];
-				DishReviewRepo.save(dishReviewEntity);
+		console.log(savedReview);
+		if (savedReview == null) {
+			const error: ErrorResponse = new ErrorResponse(
+				400,
+				'Insert review failed',
+			);
+			callback(error);
+		} else {
+			for (let index = 0; index < review.dishes.length; index++) {
+				const value = review.dishes[index];
+				if (value != '') {
+					let dishReviewEntity =
+						new DishReviewEntity();
+					dishReviewEntity.review_id =
+						savedReview.uuid;
+					dishReviewEntity.dish = value;
+					dishReviewEntity.score =
+						review.scores[index];
+					dishReviewEntity.comment =
+						review.dishComments[index];
+					await DishReviewRepo.save(
+						dishReviewEntity,
+					);
+				}
 			}
-		});
-		callback(null, 'review form added');
+			callback(null, 'review form added');
+		}
+	} catch (err: any) {
+		callback(
+			new ErrorResponse(
+				500,
+				err?.message ?? 'Insert review failed',
+			),
+		);
 	}
 };

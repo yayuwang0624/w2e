@@ -22,27 +22,36 @@ export const AddReview = async (
 
 	console.log(review);
 
-	let restaurant: RestaurantEntity =
-		new RestaurantEntity();
-	restaurant.name = review.restaurant;
-	await RestaurantRepo.upsert(restaurant, ['name']);
-	// let dishEntity: DishEntity = new DishEntity();
+	try {
+		let restaurant: RestaurantEntity =
+			new RestaurantEntity();
+		restaurant.name = review.restaurant;
+		await RestaurantRepo.upsert(restaurant, ['name']);
+		// let dishEntity: DishEntity = new DishEntity();
 
-	// dishEntity.restaurant = review.restaurant;
-	// for (let dish of dishes) {
-	//     dishEntity.name = dish;
-	//     await DishRepo.upsert(dishEntity, ['name', 'restaurant']);
-	// }
+		// dishEntity.restaurant = review.restaurant;
+		// for (let dish of dishes) {
+		//     dishEntity.name = dish;
+		//     await DishRepo.upsert(dishEntity, ['name', 'restaurant']);
+		// }
 
-	let ret = ReviewRepo.save(review);
-	console.log(ret);
-	if (ret == null) {
-		const error: ErrorResponse = new ErrorResponse(
-			400,
-			'Insert review failed',
+		let ret = ReviewRepo.save(review);
+		console.log(ret);
+		if (ret == null) {
+			const error: ErrorResponse = new ErrorResponse(
+				400,
+				'Insert review failed',
+			);
+			callback(error);
+		} else {
+			callback(null, 'review updated');
+		}
+	} catch (err: any) {
+		callback(
+			new ErrorResponse(
+				500,
+				err?.message ?? 'Insert review failed',
+			),
 		);
-		callback(error);
-	} else {
-		callback(null, 'review updated');
 	}
 };

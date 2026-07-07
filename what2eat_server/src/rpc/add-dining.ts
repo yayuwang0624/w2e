@@ -15,20 +15,29 @@ export const AddDining = async (
 	if (!(await ensureActiveUser(dining.token, callback)))
 		return;
 
-	let restaurant: RestaurantEntity =
-		new RestaurantEntity();
-	restaurant.name = dining.restaurant;
-	await RestaurantRepo.upsert(restaurant, ['name']);
+	try {
+		let restaurant: RestaurantEntity =
+			new RestaurantEntity();
+		restaurant.name = dining.restaurant;
+		await RestaurantRepo.upsert(restaurant, ['name']);
 
-	let ret = await DiningRepo.save(dining);
-	console.log(ret);
-	if (ret == null) {
-		const error: ErrorResponse = new ErrorResponse(
-			400,
-			'Adding dining failed',
+		let ret = await DiningRepo.save(dining);
+		console.log(ret);
+		if (ret == null) {
+			const error: ErrorResponse = new ErrorResponse(
+				400,
+				'Adding dining failed',
+			);
+			callback(error);
+		} else {
+			callback(null, JSON.stringify(ret.uuid));
+		}
+	} catch (err: any) {
+		callback(
+			new ErrorResponse(
+				500,
+				err?.message ?? 'Adding dining failed',
+			),
 		);
-		callback(error);
-	} else {
-		callback(null, JSON.stringify(ret.uuid));
 	}
 };

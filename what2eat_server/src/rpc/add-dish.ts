@@ -16,25 +16,34 @@ export const AddDish = async (
 	if (!(await ensureActiveUser(dish.token, callback)))
 		return;
 
-	let restaurant: RestaurantEntity =
-		new RestaurantEntity();
-	console.log(dish);
-	restaurant.name = dish.restaurant;
-	await RestaurantRepo.upsert(restaurant, ['name']);
+	try {
+		let restaurant: RestaurantEntity =
+			new RestaurantEntity();
+		console.log(dish);
+		restaurant.name = dish.restaurant;
+		await RestaurantRepo.upsert(restaurant, ['name']);
 
-	let ret = await DishRepo.upsert(dish, [
-		'restaurant',
-		'name',
-	]);
-	console.log(ret);
-	if (ret == null) {
-		const error: ErrorResponse = new ErrorResponse(
-			400,
-			'Adding dish failed',
+		let ret = await DishRepo.upsert(dish, [
+			'restaurant',
+			'name',
+		]);
+		console.log(ret);
+		if (ret == null) {
+			const error: ErrorResponse = new ErrorResponse(
+				400,
+				'Adding dish failed',
+			);
+			callback(error);
+		} else {
+			callback(null, JSON.stringify(dish.name));
+		}
+	} catch (err: any) {
+		callback(
+			new ErrorResponse(
+				500,
+				err?.message ?? 'Adding dish failed',
+			),
 		);
-		callback(error);
-	} else {
-		callback(null, JSON.stringify(dish.name));
 	}
 };
 
