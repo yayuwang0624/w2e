@@ -600,8 +600,9 @@ const ReviewTable = () => {
 				</Button>
 			</div>
 			<div className='text-xs text-default-400 mt-1'>
-				Subfield search:
-				'(reviewer|restaurant|dish):string'.
+				{
+					"Subfield search: '(reviewer|restaurant|dish):string'."
+				}
 			</div>
 			<Table
 				aria-label='Review Table'
