@@ -6,7 +6,8 @@ import { ensureActiveUser } from '../auth/require-auth';
 // Swap the model without touching code: set RECEIPT_MODEL on the server.
 // Haiku is plenty for receipts and the cheapest; bump to
 // claude-sonnet-5 / claude-opus-4-8 if photos are consistently messy.
-const MODEL = process.env.RECEIPT_MODEL || 'claude-haiku-4-5';
+const MODEL =
+	process.env.RECEIPT_MODEL || 'claude-haiku-4-5';
 
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 
@@ -68,7 +69,9 @@ const DRAFT_SCHEMA = {
 	],
 } as const;
 
-const buildPrompt = (existingNames: string[]) => `You are reading a restaurant receipt photo for a dining-log app.
+const buildPrompt = (
+	existingNames: string[],
+) => `You are reading a restaurant receipt photo for a dining-log app.
 
 Extract the meal into structured data. Follow these rules:
 
@@ -77,7 +80,7 @@ Extract the meal into structured data. Follow these rules:
 - people: Party size if the receipt states it (including any "split N ways" note). If it's not stated anywhere, assume 1 — don't guess a headcount just to satisfy the price rule below.
 - price: The cost PER PERSON, including tax — this app tracks per-person spend, not the whole table's bill. If the receipt already prints a per-person split amount, use that figure directly and set people to the stated split count. Otherwise, check whether the receipt states the number of people. If it does, divide the grand total by that number. If it does not, just use the grand total as price and leave people at 0; do not divide anything.
 - items: One entry per line item that is an actual dish. Skip pure staples like plain rice unless it's clearly a dish.
-  - nameCn: this is the canonical dish name used as the record's identity, so it must never be blank. the FULL proper Chinese dish name, in SIMPLIFIED Chinese characters. Receipts abbreviate dish names — expand each abbreviation to the real full dish name. If a Chinese name is printed, prefer it, converting it to simplified Chinese if it's written in traditional Chinese. If the restaurant is clearly non-Chinese (no Chinese characters anywhere on the receipt), set nameCn to the same clean English dish name you put in nameEn — do not invent a Chinese name for it.
+  - nameCn: this is the canonical dish name used as the record's identity, so it must never be blank. If a Chinese name is printed, prefer it, converting it to simplified Chinese if it's written in traditional Chinese. If the restaurant is clearly non-Chinese (no Chinese characters anywhere on the receipt), set nameCn to the same clean English dish name you put in nameEn — do not invent a Chinese name for it.
   - nameEn: a clean English name (expand the abbreviation).
   - qty: quantity for that line.
   - price: line total.
@@ -116,15 +119,31 @@ export const ParseReceipt = async (
 
 	try {
 		const restaurants = await RestaurantRepo.find();
-		const existingNames = restaurants.map((r) => r.name);
+		const existingNames = restaurants.map(
+			(r) => r.name,
+		);
 
-		const media = (params.mediaType ||
-			'image/jpeg') as
+		const media = (params.mediaType || 'image/jpeg') as
 			| 'image/jpeg'
 			| 'image/png'
 			| 'image/gif'
 			| 'image/webp';
 
+		const prompt = buildPrompt(existingNames);
+		console.log(
+			'[parse_receipt] request',
+			JSON.stringify({
+				model: MODEL,
+				mediaType: media,
+				imageBytes: Math.round(
+					(params.image.length * 3) / 4,
+				),
+				existingRestaurants: existingNames.length,
+				prompt,
+			}),
+		);
+
+		const started = Date.now();
 		const resp = await client.messages.create({
 			model: MODEL,
 			max_tokens: 2048,
@@ -148,12 +167,24 @@ export const ParseReceipt = async (
 						},
 						{
 							type: 'text',
-							text: buildPrompt(existingNames),
+							text: prompt,
 						},
 					],
 				},
 			],
 		} as any);
+
+		console.log(
+			'[parse_receipt] response',
+			JSON.stringify({
+				elapsedMs: Date.now() - started,
+				id: (resp as any).id,
+				model: (resp as any).model,
+				stopReason: (resp as any).stop_reason,
+				usage: (resp as any).usage,
+				content: resp.content,
+			}),
+		);
 
 		const textBlock = resp.content.find(
 			(b: any) => b.type === 'text',
@@ -191,7 +222,9 @@ export const ParseReceipt = async (
 		callback(
 			new ErrorResponse(
 				500,
-				`receipt parsing failed: ${err?.message || err}`,
+				`receipt parsing failed: ${
+					err?.message || err
+				}`,
 			),
 		);
 	}
