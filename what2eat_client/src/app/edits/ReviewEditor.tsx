@@ -63,12 +63,12 @@ const ReviewEditor = () => {
 	const [dinings, setDinings] = useState([]);
 	const [reviewer, setReviewer] = useState('');
 	const [restaurant, setRestaurnt] = useState('');
-	const [diningScore, setDiningScore] = useState(0);
+	const [diningScore, setDiningScore] = useState('0');
 	const [candDishes, setCandDishes] = useState<Dish[]>(
 		[],
 	);
 	const [dishes, setDishes] = useState(['']);
-	const [dishScores, setDishScores] = useState([0]);
+	const [dishScores, setDishScores] = useState(['0']);
 	const [dishComments, setDishComments] = useState(['']);
 	const [comment, setComment] = useState('');
 
@@ -109,14 +109,14 @@ const ReviewEditor = () => {
 		const allDishes: string[] = candDishes.map(
 			(dish) => dish.name,
 		);
-		const allDishScores: number[] = candDishes.map(() =>
-			Number(diningScore),
+		const allDishScores: string[] = candDishes.map(
+			() => diningScore,
 		);
 		const allDishComments: string[] = candDishes.map(
 			() => '',
 		);
 		allDishes.push('');
-		allDishScores.push(0);
+		allDishScores.push('0');
 		allDishComments.push('');
 		setDishes(allDishes);
 		setDishScores(allDishScores);
@@ -125,7 +125,7 @@ const ReviewEditor = () => {
 
 	const onClearAllDishes = () => {
 		setDishes(['']);
-		setDishScores([0]);
+		setDishScores(['0']);
 		setDishComments(['']);
 	};
 
@@ -141,10 +141,10 @@ const ReviewEditor = () => {
 		const updatedComments = [...currentComments];
 		const isLastRow = index === updatedDishes.length - 1;
 		updatedDishes[index] = value;
-		updatedScores[index] = Number(diningScore);
+		updatedScores[index] = diningScore;
 		if (isLastRow && value !== '') {
 			updatedDishes.push('');
-			updatedScores.push(0);
+			updatedScores.push('0');
 			updatedComments.push('');
 		}
 		setDishes(updatedDishes);
@@ -158,9 +158,7 @@ const ReviewEditor = () => {
 	) => {
 		const currentScores = dishScores;
 		const updatedScores = [...currentScores];
-		updatedScores[index] = isNaN(value as any)
-			? 0
-			: parseFloat(value);
+		updatedScores[index] = value;
 		setDishScores(updatedScores);
 	};
 
@@ -190,8 +188,7 @@ const ReviewEditor = () => {
 	};
 
 	const onDiningScoreChange = (value: string) => {
-		const nvalue = Number(value);
-		setDiningScore(nvalue);
+		setDiningScore(value);
 		const currentDishes = dishes;
 		const currentScores = dishScores;
 		const updatedScores = [...currentScores];
@@ -199,7 +196,7 @@ const ReviewEditor = () => {
 			updatedScores.length == 1 &&
 			currentDishes[0] == ''
 		) {
-			updatedScores[0] = nvalue;
+			updatedScores[0] = value;
 			setDishScores(updatedScores);
 		}
 	};
@@ -207,9 +204,9 @@ const ReviewEditor = () => {
 		let res = 0,
 			cnt = 0;
 		for (let i = 0; i < dishScores.length - 1; i++) {
-			const val = dishScores[i];
+			const val = parseFloat(dishScores[i]);
 			if (!isNaN(val)) {
-				res += Number(val);
+				res += val;
 				++cnt;
 			}
 		}
@@ -293,9 +290,7 @@ const ReviewEditor = () => {
 							label={'Score'}
 							placeholder='0'
 							name={`disheScores[${index}]`}
-							value={dishScores[
-								index
-							].toString()}
+							value={dishScores[index]}
 							onValueChange={(value) =>
 								onDishScoreChange(
 									index,
@@ -303,6 +298,8 @@ const ReviewEditor = () => {
 								)
 							}
 							type='number'
+							step='any'
+							inputMode='decimal'
 						/>
 						{index !== dishes.length - 1 && (
 							<Button
@@ -332,11 +329,11 @@ const ReviewEditor = () => {
 		setReviewer(linkedReviewer);
 		setDining('');
 		setRestaurnt('');
-		setDiningScore(0);
+		setDiningScore('0');
 		setComment('');
 		setCandDishes([]);
 		setDishes(['']);
-		setDishScores([0]);
+		setDishScores(['0']);
 		setDishComments(['']);
 	};
 
@@ -375,10 +372,12 @@ const ReviewEditor = () => {
 					match[1],
 					10,
 				);
-				dishScores[index] = parseInt(
+				const parsed = parseFloat(
 					data[key] as string,
-					10,
 				);
+				dishScores[index] = isNaN(parsed)
+					? 0
+					: parsed;
 			}
 		}
 
@@ -405,7 +404,9 @@ const ReviewEditor = () => {
 			diningRestaurant: restaurant,
 			reviewer: reviewer,
 			restaurant: diningRestaurant,
-			score: diningScore,
+			score: isNaN(parseFloat(diningScore))
+				? 0
+				: parseFloat(diningScore),
 			dishes: dishes.slice(0, -1),
 			scores: dishScores.slice(0, -1),
 			dishComments: dishComments.slice(0, -1),
@@ -510,12 +511,14 @@ const ReviewEditor = () => {
 						className='flex-[1]'
 						size={windowSize}
 						variant='bordered'
-						value={diningScore.toString()}
+						value={diningScore}
 						onValueChange={onDiningScoreChange}
 						label='Dining Score'
 						placeholder='0'
 						name='diningScore'
 						type='number'
+						step='any'
+						inputMode='decimal'
 					/>
 				</div>
 
